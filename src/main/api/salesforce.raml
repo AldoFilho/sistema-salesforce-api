@@ -1,0 +1,108 @@
+#%RAML 1.0
+version: v1
+title: SalesForce API
+baseUri: http://localhost:8081
+
+/conta:    
+  get:
+    description: "Lista todos os registros da tabela Account, caso seja passado o id retorna somente um registro."
+    queryParameters:
+      id: 
+        description: "Id de exemplo da salesforce: 0014W000023OHwH"
+        type: string
+        required: false     
+    responses:
+      200:
+        body:
+          application/json:
+            example: 
+              [
+                {
+                  "Phone": "55566611122233",
+                  "Website": null,
+                  "Id": null,
+                  "type": "Account",
+                  "Fax": "(512) 757-9001",
+                  "Name": "test2"
+                },
+                {
+                  "Phone": "(512) 757-6000",
+                  "Website": "http://edgecomm.com",
+                  "Id": null,
+                  "type": "Account",
+                  "Fax": "(512) 757-9000",
+                  "Name": "Edge Communications"
+                }
+              ]
+  /criar:
+    post:
+      body:
+        application/json:
+          properties:
+            Name:
+              type: string
+              required: true
+            Fax:
+              type: string
+              required: true
+            Phone:
+              type: string
+              required: true
+            Website:
+              type: string
+              required: true
+      responses:
+        200:
+          body:
+            application/json:
+              example: {
+                "Name": "Conta Teste",
+                "Fax": "1234567",
+                "Phone": "556622113344",
+                "Website": "site.com.br"
+              }
+  /editar:
+    put:
+      body:
+        application/json:
+          properties:
+            Id:
+              type: string
+              required: true
+            Name:
+              type: string
+              required: true
+            Fax:
+              type: string
+              required: true
+            Phone:
+              type: string
+              required: true
+            Website:
+              type: string
+              required: true
+      responses:
+        200:
+          body:
+            application/json:
+              example: {
+                "Id": "0014W000023OHwH",
+                "Name": "Conta Teste",
+                "Fax": "1234567",
+                "Phone": "556622113344",
+                "Website": "site.com.br"
+              }
+  /deletar:
+    delete:
+      queryParameters:
+        id: 
+          description: "Id de exemplo da salesforce: 0014W000023OHwH"
+          type: string
+          required: true     
+      responses:
+        200:
+          body:
+            application/json:
+              example: {
+                
+                  }                                 

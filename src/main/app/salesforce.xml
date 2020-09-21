@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/apikit" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:sfdc="http://www.mulesoft.org/schema/mule/sfdc" xmlns:spring="http://www.springframework.org/schema/beans" xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/apikit http://www.mulesoft.org/schema/mule/apikit/current/mule-apikit.xsd
+http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
+http://www.mulesoft.org/schema/mule/sfdc http://www.mulesoft.org/schema/mule/sfdc/current/mule-sfdc.xsd
+http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee/dw/current/dw.xsd
+http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd">
+    <http:listener-config name="salesforce-httpListenerConfig" host="0.0.0.0" port="8081" doc:name="HTTP Listener Configuration" />
+    <apikit:config name="salesforce-config" raml="salesforce.raml" consoleEnabled="false" doc:name="Router" />
+    <flow name="salesforce-main">
+        <http:listener config-ref="salesforce-httpListenerConfig" path="/api/*" doc:name="HTTP" />
+        <apikit:router config-ref="salesforce-config" doc:name="APIkit Router" />
+        <exception-strategy ref="salesforce-apiKitGlobalExceptionMapping" doc:name="Reference Exception Strategy" />
+    </flow>
+    <flow name="salesforce-console">
+        <http:listener config-ref="salesforce-httpListenerConfig" path="/console/*" doc:name="HTTP" />
+        <apikit:console config-ref="salesforce-config" doc:name="APIkit Console" />
+    </flow>
+    <flow name="get:/conta:salesforce-config">
+        <set-variable variableName="id" value="#[message.inboundProperties.'http.query.params'.id]" doc:name="IdConta Var" />
+        <choice doc:name="Choice">
+            <when expression="#[flowVars.id != ''  &amp;&amp; flowVars.id != null]">
+                <sfdc:query config-ref="Salesforce__Basic_Authentication" query="dsql:SELECT Fax,Id,Name,Website FROM Account WHERE Id = '#[flowVars.id]'" doc:name="getById" />
+                <logger message="Consulta por conta especifica" level="INFO" doc:name="Log getById" />
+            </when>
+            <otherwise>
+                <sfdc:query-all config-ref="Salesforce__Basic_Authentication" query="dsql:SELECT Id, Name, fax, phone, website FROM Account" doc:name="getAll" />
+                <logger message="Consulta de todos os usuários." level="INFO" doc:name="Log getAll" />
+            </otherwise>
+        </choice>
+        <dw:transform-message doc:name="Transform Message">
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+---
+payload]]></dw:set-payload>
+        </dw:transform-message>
+    </flow>
+    <flow name="put:/conta/editar:application/json:salesforce-config">
+        <flow-ref name="editarContaSubFlow" doc:name="Flow Reference" />
+        <set-payload value="#[payload]" doc:name="Set Payload" />
+    </flow>
+    <flow name="post:/conta/criar:application/json:salesforce-config">
+        <flow-ref name="criarContaSubFlow" doc:name="Flow Reference" />
+        <set-payload value="#[payload]" doc:name="Set Payload" />
+    </flow>
+    <flow name="delete:/conta/deletar:salesforce-config">
+		<flow-ref name="deletarContaSub_Flow" doc:name="Flow Reference"/>
+        <set-payload value="#[payload]" doc:name="Set Payload"/>
+    </flow>
+</mule>
